@@ -1,72 +1,73 @@
 # Mini RISC-V + Verilator Demo
 
-Un progetto didattico minimale per simulare un **core RISC-V single-cycle** con **Verilator**.  
-Il firmware legge due operandi e un codice operazione da **MMIO** (`0x8000_0000`), calcola **ADD** o **SUB**, scrive il risultato su MMIO e termina con `EBREAK`.  
-Supporta **onde** con GTKWave (FST).
+A **minimal educational project** to simulate a **single-cycle RISC-V core** with **Verilator**.  
+The firmware reads two operands and an operation code from **MMIO** (`0x8000_0000`), performs **ADD** or **SUB**, writes the result back to MMIO, and terminates with `EBREAK`.  
+Supports **waveforms** with GTKWave (FST).
 
 ---
 
-## Contenuti & Struttura
+## Project Structure
 
 ```
 rv32-verilator-demo/
 ├─ rtl/
-│  └─ mini_rv32i.v          # Core RV32I single-cycle con DMEM + MMIO
+│  └─ mini_rv32i.v          # RV32I single-cycle core with DMEM + MMIO
 ├─ sim/
-│  └─ main.cpp              # Testbench C++ per Verilator (clock/reset, MMIO I/O)
+│  └─ main.cpp              # Verilator C++ testbench (clock/reset, MMIO I/O)
 ├─ firmware/
-│  ├─ prog.S                # Firmware di esempio (Assembly)
-│  └─ bin2hex32.py          # BIN → HEX (32-bit/word) per $readmemh
-└─ Makefile                 # Build firmware + simulatore (+ onde)
+│  ├─ prog.S                # Example firmware (Assembly)
+│  └─ bin2hex32.py          # BIN → HEX (32-bit/word) for $readmemh
+└─ Makefile                 # Build firmware + simulator (+ waveforms)
 ```
 
 ---
 
-## Requisiti
+## Requirements
 
-- **Verilator** (>= 5.x) nel `PATH`
+- **Verilator** (>= 5.x) in `PATH`
 - **GNU C++** (g++), `make`, `python3`
-- **GTKWave** (per le onde): `sudo apt install -y gtkwave`
-- **Toolchain RISC-V bare-metal** (xPack consigliato):
+- **GTKWave** (`sudo apt install -y gtkwave`)
+- **RISC-V bare-metal toolchain** (xPack recommended):
   - `riscv-none-elf-gcc`, `riscv-none-elf-as`, `riscv-none-elf-objcopy`, …
 
-### Installazione toolchain RISC-V (xPack, WSL/Ubuntu)
+### RISC-V Toolchain Installation (xPack, WSL/Ubuntu)
 
 ```bash
-# 1) xpm (se non già presente)
+# 1) Install xpm if missing
 sudo apt update
 sudo apt install -y nodejs npm
 npm install --global xpm
 
-# 2) toolchain
+# 2) Install toolchain
 xpm install --global @xpack-dev-tools/riscv-none-elf-gcc@latest
 
-# 3) PATH (metti UNA sola riga nel tuo ~/.bashrc o ~/.zshrc)
+# 3) Update PATH (add one line to ~/.bashrc or ~/.zshrc)
 echo 'export PATH="$HOME/.local/xPacks/@xpack-dev-tools/riscv-none-elf-gcc/14.2.0-3.1/.content/bin:$PATH"' >> ~/.bashrc
 source ~/.bashrc
 which riscv-none-elf-gcc && riscv-none-elf-gcc --version
 ```
 
-> In alternativa su alcune Ubuntu: `sudo apt install -y gcc-riscv64-unknown-elf binutils-riscv64-unknown-elf`  
-> (in tal caso nei comandi usa `riscv64-unknown-elf-*` invece di `riscv-none-elf-*`)
+> Alternatively, on some Ubuntu versions:  
+> `sudo apt install -y gcc-riscv64-unknown-elf binutils-riscv64-unknown-elf`  
+> (then use `riscv64-unknown-elf-*` instead of `riscv-none-elf-*`).
 
 ---
 
 ## Quickstart
 
-Dalla root del progetto:
+From the project root:
 
 ```bash
-make          # compila firmware + simulatore
-make run      # esegue la sim
-# Output atteso:
+make          # build firmware + simulator
+make run      # run simulation
+# Expected output:
 # Program finished. x3 = 30 (0x0000001e)
 # MMIO result = 30 (0x0000001e)
 ```
 
-### Onde (GTKWave)
+### Waveforms (GTKWave)
 
-**Metodo sicuro (sempre ricompila con trace):**
+**Safe method (always recompile with trace):**
 ```bash
 make clean
 make WAVES=1 all
@@ -74,50 +75,48 @@ make WAVES=1 all
 gtkwave build/trace.fst &
 ```
 
-> Se nel tuo `Makefile` hai il target `waves` che fa clean+trace+run+open:
+> If your `Makefile` has a `waves` target (clean+trace+run+open):
 > ```bash
 > make waves
 > ```
-> In caso contrario usa i 4 comandi sopra.
+> Otherwise, use the 4 commands above.
 
 ---
 
-## Come funziona la pipeline del firmware
+## Firmware Build Pipeline
 
-- **Sorgenti**: puoi usare **Assembly** (`firmware/prog.S`) *oppure* **C** (`firmware/main.c`, opzionale).  
-- **Pipeline** (Makefile):
-  1. `as/cc` → oggetto o ELF
+- **Sources**: you can use **Assembly** (`firmware/prog.S`) or **C** (`firmware/main.c`, optional).  
+- **Makefile pipeline**:
+  1. `as/cc` → object or ELF
   2. `objcopy -O binary` → `prog.bin`
-  3. `bin2hex32.py` → `firmware/prog.hex` (parole da 32 bit in esadecimale)
+  3. `bin2hex32.py` → `firmware/prog.hex` (32-bit words, hex)
 
-Il core carica `firmware/prog.hex` in **ROM istruzioni** tramite `$readmemh`.
+The core loads `firmware/prog.hex` into **instruction ROM** via `$readmemh`.
 
-> Perché `bin2hex32.py`?  
-> Garantisce un HEX “a **parole** da 32 bit” compatibile con `reg [31:0] imem[...]`.  
-> `-O verilog` produce spesso un formato “a byte” con marcatori che non combacia con `$readmemh` su parole.
+Why not `-O verilog`? Because it produces byte-wise HEX with markers, incompatible with `$readmemh` on word arrays.
 
 ---
 
-## RTL: `rtl/mini_rv32i.v` (riassunto)
+## RTL: `rtl/mini_rv32i.v` (summary)
 
-- **Core** single-cycle RV32I minimale.
-- **ROM** istruzioni: `imem[0:255]` (1 KiB), indicizzata con `pc[9:2]`.
-- **DMEM** dati: `dmem[0:255]` (1 KiB) per `LW/SW` non-MMIO.
-- **MMIO** base `0x8000_0000`:
+- **Single-cycle** RV32I core.
+- **Instruction ROM**: `imem[0:255]` (1 KiB), indexed by `pc[9:2]`.
+- **Data memory**: `dmem[0:255]` (1 KiB) for `LW/SW` not in MMIO space.
+- **MMIO base** `0x8000_0000`:
   - `0x8000_0000` → A (ro)
   - `0x8000_0004` → B (ro)
   - `0x8000_0008` → OP (ro) — `0=ADD`, `1=SUB`
-  - `0x8000_000C` → RES (wo) — scritta dal core
-- **Istruzioni supportate**: `LUI`, `ADDI`, `ADD`, `SUB`, `LW`, `SW`, `BEQ`, `EBREAK`.
-- **Terminazione**: su `EBREAK` (imm=1) → `done=1`, `x3_out <= x3`.
-- **Nota**: `x0` forzato a zero ad ogni ciclo (`x[0] <= 0`).
+  - `0x8000_000C` → RES (wo)
+- **Supported instructions**: `LUI`, `ADDI`, `ADD`, `SUB`, `LW`, `SW`, `BEQ`, `EBREAK`.
+- **Termination**: `EBREAK` (imm=1) → `done=1`, `x3_out <= x3`.
+- **Note**: `x0` is forced to zero each cycle (`x[0] <= 0`).
 
 ---
 
-## Firmware: `firmware/prog.S` (flusso logico)
+## Firmware Example (`firmware/prog.S`)
 
 ```asm
-lui   x10, 0x80000      # x10 = 0x80000000 (base MMIO)
+lui   x10, 0x80000      # x10 = 0x80000000 (MMIO base)
 lw    x1,  0(x10)       # A
 lw    x2,  4(x10)       # B
 lw    x4,  8(x10)       # OP (0 add, 1 sub)
@@ -140,49 +139,47 @@ DO_SUB:
 
 ---
 
-## Testbench: `sim/main.cpp` (cosa modifica l’utente)
+## Testbench (`sim/main.cpp`)
 
-- Imposta gli ingressi MMIO prima di togliere il reset:
+- Sets MMIO inputs before releasing reset:
   ```cpp
   uint32_t A = 21, B = 9, OP = 0; // 0=ADD, 1=SUB
   top->io_in_a = A;
   top->io_in_b = B;
   top->io_op   = OP;
   ```
-- Esegue clock/reset, aspetta `done`, stampa `x3_out` e `io_out_res`.
-- Se compilato con `WAVES=1`, produce `build/trace.fst`.
+- Runs clock/reset, waits for `done`, prints `x3_out` and `io_out_res`.
+- With `WAVES=1`, produces `build/trace.fst`.
 
 ---
 
-## Onde: cosa osservare in GTKWave
+## Waveforms: What to Observe
 
 - `pc`, `instr`, `done`
 - `x3_out`, `io_out_res`, `io_out_valid`
 - `opcode`, `funct3`, `funct7`, `imm_i/imm_s/imm_b/imm_u`
-- Registri GPR (`x[0]..x[31]`) — in Verilator appaiono come segnali interni del modulo.
+- GPR registers (`x[0]..x[31]`) — visible as Verilator internal signals.
 
-> Suggerimento: salva un setup con `File → Write Save File…` e riaprilo al volo.
+> Tip: Save a setup with `File → Write Save File…` in GTKWave for quick reload.
 
 ---
 
 ## Troubleshooting
 
-**Verilator non trovato**
+**Verilator not found**
 ```bash
-verilator --version           # deve rispondere
-# Se no, verifica l'installazione o il PATH
+verilator --version
 ```
 
-**RISC-V toolchain non trovata**
+**RISC-V toolchain not found**
 ```bash
 which riscv-none-elf-gcc
-riscv-none-elf-gcc --version  # deve rispondere
-# Se no, rivedi la sezione "Requisiti" e il PATH in ~/.bashrc
+riscv-none-elf-gcc --version
 ```
 
 **GTKWave: “Could not initialize 'build/trace.fst'”**
-- Probabile che il binario sia stato compilato **senza** tracing.
-- Soluzione:
+- Probably compiled **without** tracing.  
+  Solution:
   ```bash
   make clean
   make WAVES=1 all
@@ -190,38 +187,31 @@ riscv-none-elf-gcc --version  # deve rispondere
   gtkwave build/trace.fst &
   ```
 
-**“Nothing to be done for 'all'” ma non vedo trace**
-- `make` sta riusando artefatti vecchi. Fai `make clean` prima di `WAVES=1`.
+**“Nothing to be done for 'all'” but no trace**
+- Old build reused. Run `make clean` before `WAVES=1`.
 
 ---
 
-## Estensioni consigliate
+## Suggested Extensions
 
-- Aggiungere ALU ops: `AND`, `OR`, `XOR`, `SLT`, … e mappare nuovi codici `io_op`.
-- Gestione `io_out_valid` **a impulso** (1 ciclo): pulisci `io_out_valid <= 0` a inizio ciclo e metti `<= 1` solo nella scrittura MMIO.
-- Nuove branch (`BNE`, `BLT`, …) e salti (`JAL`, `JALR`) per loop/call.
-- Interfacce I/O più realistiche (UART, FIFO) via MMIO.
+- Add ALU ops: `AND`, `OR`, `XOR`, `SLT`, … mapped to new `io_op` codes.
+- Make `io_out_valid` a **1-cycle pulse** (clear at start of cycle, set only on MMIO write).
+- Add more branches (`BNE`, `BLT`, …) and jumps (`JAL`, `JALR`) for loops/calls.
+- Add realistic I/O devices (UART, FIFO) via MMIO.
 
 ---
 
-## Comandi utili
+## Useful Commands
 
 ```bash
-# Build + run base
-make && make run
-
-# Rigenerare firmware dopo modifiche a prog.S
-make clean && make && make run
-
-# Onde (sicuro)
+make && make run                      # Build + run
+make clean && make && make run        # Rebuild firmware after edits
 make clean && make WAVES=1 all && ./build/sim && gtkwave build/trace.fst &
-
-# Pulizia completa
-make clean
+make clean                            # Full cleanup
 ```
 
 ---
 
-## Licenza
+## License
 
-Questo progetto è a scopo didattico. Usa e modifica liberamente i file nel rispetto delle licenze dei tool utilizzati (Verilator, xPack, GTKWave).
+This project is for educational purposes. Use and modify freely, respecting the licenses of used tools (Verilator, xPack, GTKWave).
