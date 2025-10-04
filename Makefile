@@ -14,7 +14,7 @@ BIN       = $(BUILD_DIR)/sim
 
 # Sorgenti firmware
 FW_ASM   = firmware/prog.S
-FW_C     = firmware/main.c  # opzionale
+FW_C     = firmware/main.c
 
 FW_ELF   = $(BUILD_DIR)/prog.elf
 FW_O     = $(BUILD_DIR)/prog.o
