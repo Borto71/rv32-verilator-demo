@@ -46,30 +46,30 @@ module mini_rv32i (
   localparam [31:0] MMIO_A    = MMIO_BASE + 32'h0; // offset 0
   localparam [31:0] MMIO_B    = MMIO_BASE + 32'h4; // offset 4
   localparam [31:0] MMIO_OP   = MMIO_BASE + 32'h8; // offset 8
-  localparam [31:0] MMIO_RES  = MMIO_BASE + 32'hC; // 
+  localparam [31:0] MMIO_RES  = MMIO_BASE + 32'hC; // offset 12
 
   // Letture MMIO (match su indirizzo completo)
-  function [31:0] mmio_read;
-    input [31:0] addr;
+  function [31:0] mmio_read; // ritorna il dato letto a 32 bit
+    input [31:0] addr; // decodifica per indirizzo
     begin
       case (addr)
-        MMIO_A:  mmio_read = io_in_a;
-        MMIO_B:  mmio_read = io_in_b;
-        MMIO_OP: mmio_read = {30'b0, io_op};
-        default: mmio_read = 32'h0;
+        MMIO_A:  mmio_read = io_in_a; // legge il dato da input A
+        MMIO_B:  mmio_read = io_in_b; // legge il dato da input B
+        MMIO_OP: mmio_read = {30'b0, io_op}; // legge il dato da input OP (espanso a 32 bit)
+        default: mmio_read = 32'h0; // indirizzo non valido, ritorna 0
       endcase
     end
   endfunction
 
   // Scritture MMIO (match su indirizzo completo)
-  task mmio_write;
+  task mmio_write; // se la CPU fa uno STORE all'indirizzio MMIO_RES, salva il dato in output e alza il flag di validità.
     input [31:0] addr;
-    input [31:0] wdata;
+    input [31:0] wdata; 
     begin
       if (addr == MMIO_RES) begin
-        io_out_res   <= wdata;
-        io_out_valid <= 1'b1;
-      end
+        io_out_res   <= wdata; // scrive il dato di output
+        io_out_valid <= 1'b1; // risultato pronto
+      end // per qualunque altra cosa non fa nulla 
     end
   endtask
 
@@ -77,41 +77,41 @@ module mini_rv32i (
   wire [31:0] addr_i = x[rs1] + imm_i; // indirizzo per LW
   wire [31:0] addr_s = x[rs1] + imm_s; // indirizzo per SW
 
-  integer i;
-  always @(posedge clk) begin
-    if (rst) begin
-      pc           <= 0;
-      done         <= 0;
-      x3_out       <= 0;
-      io_out_res   <= 0;
-      io_out_valid <= 0;
-      for (i=0;i<32;i=i+1) x[i] <= 0;
+  integer i; // indice per reset registri
+  always @(posedge clk) begin // ciclo di clock
+    if (rst) begin // reset sincrono
+      pc           <= 0; // reset PC
+      done         <= 0; // reset done
+      x3_out       <= 0; // reset x3_out
+      io_out_res   <= 0; // reset output
+      io_out_valid <= 0; // reset output-valid
+      for (i=0;i<32;i=i+1) x[i] <= 0; // reset registri
     end else if (!done) begin
       // opzionale: clear dell'output-valid se vuoi un impulso di 1 ciclo
       // io_out_valid <= 1'b0;
 
-      case (opcode)
+      case (opcode) // esegue l'istruzione
         7'h37: begin // LUI
-          if (rd!=0) x[rd] <= imm_u;
-          pc <= pc + 4;
+          if (rd!=0) x[rd] <= imm_u; // carica imm_u in rd se rd!=x0
+          pc <= pc + 4; // avanza PC
         end
         7'h13: begin // OP-IMM (ADDI)
-          if (funct3 == 3'b000) begin
-            if (rd!=0) x[rd] <= x[rs1] + imm_i;
+          if (funct3 == 3'b000) begin // ADDI
+            if (rd!=0) x[rd] <= x[rs1] + imm_i; // esegue ADDI se rd!=x0
           end
-          pc <= pc + 4;
+          pc <= pc + 4; // avanza PC
         end
         7'h33: begin // OP (ADD/SUB)
           if (funct3 == 3'b000 && funct7 == 7'b0000000) begin // ADD
-            if (rd!=0) x[rd] <= x[rs1] + x[rs2];
+            if (rd!=0) x[rd] <= x[rs1] + x[rs2]; // esegue ADD se rd!=x0
           end else
           if (funct3 == 3'b000 && funct7 == 7'b0100000) begin // SUB
-            if (rd!=0) x[rd] <= x[rs1] - x[rs2];
+            if (rd!=0) x[rd] <= x[rs1] - x[rs2]; // esegue SUB se rd!=x0
           end
-          pc <= pc + 4;
+          pc <= pc + 4; // avanza PC
         end
         7'h03: begin // LOAD (LW)
-          if (funct3 == 3'b010) begin
+          if (funct3 == 3'b010) begin 
             if (addr_i[31:28] == 4'h8) begin
               if (rd!=0) x[rd] <= mmio_read(addr_i);
             end else begin
