@@ -1,5 +1,7 @@
 # --- Toolchain ---
 VERILATOR ?= verilator
+ICARUS    ?= iverilog
+VVP       ?= vvp
 RISCV     ?= riscv-none-elf
 
 AS      := $(RISCV)-as
@@ -11,6 +13,9 @@ BUILD_DIR = build
 RTL       = rtl/mini_rv32i.v
 TB        = sim/main.cpp
 BIN       = $(BUILD_DIR)/sim
+ICARUS_TB = sim/tb.v
+ICARUS_BUILD = $(BUILD_DIR)/icarus
+ICARUS_BIN   = $(ICARUS_BUILD)/sim
 
 # Sorgenti firmware
 FW_ASM   = firmware/prog.S
@@ -24,13 +29,10 @@ FW_HEX   = firmware/prog.hex
 FW_CFLAGS  = -march=rv32i -mabi=ilp32 -nostdlib -Os -ffreestanding
 FW_LDFLAGS = -Wl,--no-relax -Wl,-Ttext=0x0
 
-WAVES ?= 0
-TRACE_FLAGS =
-ifeq ($(WAVES),1)
+# Abilita sempre il tracing
 TRACE_FLAGS = --trace-fst --trace-structs
-endif
 
-.PHONY: all run clean waves
+.PHONY: all run clean waves icarus
 
 all: $(BIN)
 
@@ -59,16 +61,30 @@ $(FW_HEX): $(FW_BIN) firmware/bin2hex32.py
 $(BIN): $(RTL) $(TB) $(FW_HEX)
 	@mkdir -p $(BUILD_DIR)
 	$(VERILATOR) -Wall $(TRACE_FLAGS) --cc $(RTL) --exe $(TB) \
-	  -O3 -CFLAGS "-std=c++17" \
+	  -O3 -CFLAGS "-std=c++17 -DTRACE_FST" \
 	  --build -Mdir $(BUILD_DIR) -o sim
 
 run: $(BIN)
 	./$(BIN)
 
-waves:
-	$(MAKE) WAVES=1 all
+# Build + run with Icarus Verilog (Verilog testbench)
+icarus: $(ICARUS_BIN)
+	$(VVP) $<
+
+$(ICARUS_BIN): $(RTL) $(ICARUS_TB) $(FW_HEX)
+	@mkdir -p $(ICARUS_BUILD)
+	$(ICARUS) -g2012 -o $@ $(ICARUS_TB) $(RTL)
+
+# Modalità “onde”: crea trace.fst in ogni caso
+waves: $(BIN)
+	@echo "Simulazione con tracciamento (trace.fst)..."
 	./$(BIN)
-	@echo "Apro onde con GTKWave: gtkwave $(BUILD_DIR)/trace.fst &"
+	@if [ -f $(BUILD_DIR)/trace.fst ]; then \
+	  echo "File delle onde creato: $(BUILD_DIR)/trace.fst"; \
+	  gtkwave $(BUILD_DIR)/trace.fst & \
+	else \
+	  echo "Nessun file trace.fst trovato. Verifica che main.cpp contenga la logica di tracing."; \
+	fi
 
 clean:
 	rm -rf $(BUILD_DIR) $(FW_HEX)

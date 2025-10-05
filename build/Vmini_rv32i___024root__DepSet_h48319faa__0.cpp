@@ -20,7 +20,6 @@ void Vmini_rv32i___024root___eval_nba(Vmini_rv32i___024root* vlSelf) {
     // Body
     if ((1ULL & vlSelfRef.__VnbaTriggered.word(0U))) {
         Vmini_rv32i___024root___nba_sequent__TOP__0(vlSelf);
-        vlSelfRef.__Vm_traceActivity[1U] = 1U;
     }
 }
 
@@ -100,7 +99,6 @@ VL_INLINE_OPT void Vmini_rv32i___024root___nba_sequent__TOP__0(Vmini_rv32i___024
     __VdlySet__mini_rv32i__DOT__x__v37 = 0U;
     __VdlySet__mini_rv32i__DOT__x__v38 = 0U;
     if (vlSelfRef.rst) {
-        vlSelfRef.mini_rv32i__DOT__i = 0x20U;
         __Vdly__mini_rv32i__DOT__pc = 0U;
         __Vdly__done = 0U;
         vlSelfRef.x3_out = 0U;

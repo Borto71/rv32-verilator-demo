@@ -21,8 +21,6 @@ class alignas(VL_CACHE_LINE_BYTES) Vmini_rv32i__Syms final : public VerilatedSym
   public:
     // INTERNAL STATE
     Vmini_rv32i* const __Vm_modelp;
-    bool __Vm_activity = false;  ///< Used by trace routines to determine change occurred
-    uint32_t __Vm_baseCode = 0;  ///< Used by trace routines when tracing multiple models
     VlDeleter __Vm_deleter;
     bool __Vm_didInit = false;
 

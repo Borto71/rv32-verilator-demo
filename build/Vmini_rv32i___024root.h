@@ -31,12 +31,10 @@ class alignas(VL_CACHE_LINE_BYTES) Vmini_rv32i___024root final : public Verilate
     IData/*31:0*/ mini_rv32i__DOT__imm_i;
     IData/*31:0*/ mini_rv32i__DOT__addr_i;
     IData/*31:0*/ mini_rv32i__DOT__addr_s;
-    IData/*31:0*/ mini_rv32i__DOT__i;
     IData/*31:0*/ __VactIterCount;
     VlUnpacked<IData/*31:0*/, 32> mini_rv32i__DOT__x;
     VlUnpacked<IData/*31:0*/, 256> mini_rv32i__DOT__imem;
     VlUnpacked<IData/*31:0*/, 256> mini_rv32i__DOT__dmem;
-    VlUnpacked<CData/*0:0*/, 2> __Vm_traceActivity;
     VlTriggerVec<1> __VstlTriggered;
     VlTriggerVec<1> __VactTriggered;
     VlTriggerVec<1> __VnbaTriggered;

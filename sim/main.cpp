@@ -24,12 +24,12 @@ int main(int argc, char** argv) {
   uint32_t OP = 0;   // 0=ADD, 1=SUB
 
   // Reset + set MMIO inputs
-  top->io_in_a = A;
-  top->io_in_b = B;
-  top->io_op   = OP;
+  top -> io_in_a = A;
+  top -> io_in_b = B;
+  top -> io_op   = OP;
 
   top->rst = 1;
-  for (int i=0;i<4;i++) {
+  for (int i=0; i<4; i++) {
     top->clk = 0; top->eval(); sim_time++;
 #if VM_TRACE
     tfp->dump(sim_time);
@@ -53,9 +53,9 @@ int main(int argc, char** argv) {
 #endif
   }
 
-  printf("Program finished. x3 = %u (0x%08x)\n", top->x3_out, top->x3_out);
-  if (top->io_out_valid) {
-    printf("MMIO result = %u (0x%08x)\n", top->io_out_res, top->io_out_res);
+  printf("Program finished. x3 = %u (0x%08x)\n", top->x3_out, top -> x3_out);
+  if (top -> io_out_valid) {
+    printf("MMIO result = %u (0x%08x)\n", top -> io_out_res, top -> io_out_res);
   } else {
     printf("MMIO result not written.\n");
   }
