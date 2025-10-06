@@ -16,6 +16,7 @@ BIN       = $(BUILD_DIR)/sim
 ICARUS_TB = sim/tb.v
 ICARUS_BUILD = $(BUILD_DIR)/icarus
 ICARUS_BIN   = $(ICARUS_BUILD)/sim
+ICARUS_VCD   = $(BUILD_DIR)/icarus_trace.vcd
 
 # Sorgenti firmware
 FW_ASM   = firmware/prog.S
@@ -76,14 +77,14 @@ $(ICARUS_BIN): $(RTL) $(ICARUS_TB) $(FW_HEX)
 	$(ICARUS) -g2012 -o $@ $(ICARUS_TB) $(RTL)
 
 # Modalità “onde”: crea trace.fst in ogni caso
-waves: $(BIN)
-	@echo "Simulazione con tracciamento (trace.fst)..."
-	./$(BIN)
-	@if [ -f $(BUILD_DIR)/trace.fst ]; then \
-	  echo "File delle onde creato: $(BUILD_DIR)/trace.fst"; \
-	  gtkwave $(BUILD_DIR)/trace.fst & \
+waves: $(ICARUS_BIN)
+	@echo "Simulazione Icarus con tracciamento (icarus_trace.vcd)..."
+	$(VVP) $(ICARUS_BIN)
+	@if [ -f $(ICARUS_VCD) ]; then \
+	  echo "File delle onde creato: $(ICARUS_VCD)"; \
+	  gtkwave $(ICARUS_VCD) & \
 	else \
-	  echo "Nessun file trace.fst trovato. Verifica che main.cpp contenga la logica di tracing."; \
+	  echo "Nessun file $(ICARUS_VCD) trovato. Verifica che sim/tb.v abiliti $dumpvars."; \
 	fi
 
 clean:
