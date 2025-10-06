@@ -162,4 +162,4 @@ make -f Makefile2 waves                          # Icarus waveform flow
 
 ## License
 
-Educational use encouraged. Respect the licenses of bundled or required tools (Verilator, Icarus Verilog, GTKWave, xPack toolchain).
+This project is licensed under the **MIT License**. 
