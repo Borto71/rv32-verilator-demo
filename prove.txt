@@ -1,0 +1,18 @@
+RISULTATI OTTENUTI VERILATOR:
+
+- V e r i l a t i o n   R e p o r t: Verilator 5.041 devel rev v5.040-201-g21dbdbf69
+- Verilator: Built from 0.026 MB sources in 2 modules, into 0.055 MB in 7 C++ files needing 0.000 MB
+- Verilator: Walltime 0.210 s (elab=0.006, cvt=0.014, bld=0.180); cpu 0.015 s on 1 threads; alloced 20.473 MB
+./build/sim
+Program finished. x3 = 30 (0x0000001e)
+MMIO result = 30 (0x0000001e)
+real 0:00.34
+
+
+ICARUS VERILOG:
+
+VCD info: dumpfile build/icarus_trace.vcd opened for output.
+Program finished. x3 = 30 (0x0000001e)
+MMIO result = 30 (0x0000001e)
+sim/tb.v:39: $finish called at 135000 (1ps)
+real 0:00.04
