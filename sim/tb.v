@@ -23,7 +23,7 @@ module tb_mini_rv32i;
     .done(done)
   );
 
-  always #5 clk = ~clk; // clock a 100 MHz
+  always #5 clk = ~clk; // clock 
 
   localparam integer NUM_TESTS  = 5;
   localparam integer MAX_CYCLES = 4096;
@@ -46,7 +46,7 @@ module tb_mini_rv32i;
     input [31:0] atteso;
     integer ciclo;
     reg test_ok;
-    
+
     begin
       // Pre-carica gli ingressi MMIO e genera un reset pulito
       io_in_a = a;
