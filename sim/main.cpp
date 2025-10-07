@@ -1,5 +1,6 @@
 #include <verilated.h>
 #include "Vmini_rv32i.h"
+
 #if VM_TRACE
 # include <verilated_fst_c.h>
 #endif
