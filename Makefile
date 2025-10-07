@@ -78,6 +78,7 @@ run_provanti: $(BIN_STRONG)
 	./$(BIN_STRONG)
 
 waves:
+	rm -f $(BIN)
 	$(MAKE) WAVES=1 all
 	./$(BIN)
 	@if [ -f $(BUILD_DIR)/trace.fst ]; then \
@@ -92,6 +93,7 @@ waves:
 	fi
 
 waves_provanti:
+	rm -f $(BIN_STRONG)
 	$(MAKE) WAVES=1 $(BIN_STRONG)
 	./$(BIN_STRONG)
 	@if [ -f $(BUILD_DIR)/trace_strong.fst ]; then \
