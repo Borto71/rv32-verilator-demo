@@ -149,16 +149,39 @@ Both share the same firmware image (`firmware/prog.hex`).
 
 ---
 
-## Useful Commands
+## 🛠️ Useful Commands
 
+### 🔧 Build & Run with Verilator
 ```bash
-make && make run                                 # Build + run via Verilator
-make clean && make WAVES=1 all && ./build/sim    # Verilator waveform flow
-make -f Makefile2 icarus                         # Build + run via Icarus
-make -f Makefile2 waves                          # Icarus waveform flow
+make && make run
 ```
+Compila il progetto e lo esegue utilizzando **Verilator**.
+
+### 🌊 Verilator Waveform Flow
+```bash
+make clean && make WAVES=1 all && ./build/sim
+```
+Esegue una compilazione pulita, genera le **waveform (VCD)** e avvia la simulazione tramite Verilator.
+
+### ⚙️ Build & Run with Icarus Verilog
+```bash
+make -f Makefile2 icarus
+```
+Compila ed esegue la simulazione utilizzando **Icarus Verilog**.
+
+### 📈 Icarus Waveform Flow
+```bash
+make -f Makefile2 waves
+```
+Esegue la simulazione con Icarus Verilog e genera le **waveform** per l’analisi.
 
 ---
+
+## 📚 Reference
+
+Per la documentazione e i dettagli sull’ISA RISC-V, puoi consultare la seguente risorsa:  
+👉 [RISC-V ISA Documentation](https://msyksphinz-self.github.io/riscv-isadoc/html/rvi.html)
+
 
 ## License
 
