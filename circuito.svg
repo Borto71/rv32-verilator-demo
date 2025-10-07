@@ -2507,7 +2507,7 @@
 <polygon fill="none" stroke="black" points="6079.75,-2511 6079.75,-2549 6220.75,-2549 6220.75,-2511 6079.75,-2511"/>
 <text text-anchor="middle" x="6092.75" y="-2526.3" font-family="Times,serif" font-size="14.00">A</text>
 <polyline fill="none" stroke="black" points="6105.75,-2511 6105.75,-2549 "/>
-<text text-anchor="middle" x="6150.25" y="-2533.8" font-family="Times,serif" font-size="14.00">$234</text>
+<text text-anchor="middle" x="6150.25" y="-2533.8" font-family="Times,serif" font-size="14.00">$223</text>
 <text text-anchor="middle" x="6150.25" y="-2518.8" font-family="Times,serif" font-size="14.00">$logic_not</text>
 <polyline fill="none" stroke="black" points="6194.75,-2511 6194.75,-2549 "/>
 <text text-anchor="middle" x="6207.75" y="-2526.3" font-family="Times,serif" font-size="14.00">Y</text>

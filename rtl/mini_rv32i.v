@@ -2,7 +2,7 @@ module mini_rv32i (
   input  wire        clk, // clock 
   input  wire        rst, // reset
 
-  // --- MMIO "host" ---
+  // --- MMIO ---
   input  wire [31:0] io_in_a, // operandi a 32 bit forniti dal testbench
   input  wire [31:0] io_in_b, // operandi a 32 bit forniti dal testbench
   input  wire [1:0]  io_op,        // 0=ADD, 1=SUB
@@ -95,12 +95,14 @@ module mini_rv32i (
           if (rd!=0) x[rd] <= imm_u; // carica imm_u in rd se rd!=x0
           pc <= pc + 4; // avanza PC
         end
+
         7'h13: begin // OP-IMM (ADDI)
           if (funct3 == 3'b000) begin // ADDI
             if (rd!=0) x[rd] <= x[rs1] + imm_i; // esegue ADDI se rd!=x0
           end
           pc <= pc + 4; // avanza PC
         end
+
         7'h33: begin // OP (ADD/SUB)
           if (funct3 == 3'b000 && funct7 == 7'b0000000) begin // ADD
             if (rd!=0) x[rd] <= x[rs1] + x[rs2]; // esegue ADD se rd!=x0
@@ -110,6 +112,7 @@ module mini_rv32i (
           end
           pc <= pc + 4; // avanza PC
         end
+
         7'h03: begin // LOAD (LW)
           if (funct3 == 3'b010) begin 
             if (addr_i[31:28] == 4'h8) begin
@@ -120,6 +123,7 @@ module mini_rv32i (
           end
           pc <= pc + 4;
         end
+
         7'h23: begin // STORE (SW)
           if (funct3 == 3'b010) begin
             if (addr_s[31:28] == 4'h8) begin
@@ -130,6 +134,7 @@ module mini_rv32i (
           end
           pc <= pc + 4;
         end
+        
         7'h63: begin // BRANCH (BEQ)
           if (funct3 == 3'b000) begin
             pc <= (x[rs1] == x[rs2]) ? (pc + imm_b) : (pc + 4);
@@ -137,6 +142,7 @@ module mini_rv32i (
             pc <= pc + 4; // altre branch non implementate
           end
         end
+
         7'h73: begin // SYSTEM (EBREAK imm=1)
           if (instr[31:20] == 12'h001) begin
             done   <= 1;

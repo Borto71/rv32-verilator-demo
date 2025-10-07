@@ -37,7 +37,7 @@ x2:e -> c190:p185:w [arrowhead=odiamond, arrowtail=odiamond, dir=both, color="bl
 c191 [ shape=record, label="{{<p184> A|<p185> B}|$48\n$add|{<p186> Y}}",  ];
 x3 [ shape=record, style=rounded, label="<s21> 20x 31:31 - 31:12 |<s1> 31:25 - 11:5 |<s0> 11:7 - 4:0 ", color="black", fontcolor="black" ];
 x3:e -> c191:p185:w [arrowhead=odiamond, arrowtail=odiamond, dir=both, color="black", fontcolor="black", style="setlinewidth(3)", label=""];
-c192 [ shape=record, label="{{<p184> A}|$234\n$logic_not|{<p186> Y}}",  ];
+c192 [ shape=record, label="{{<p184> A}|$223\n$logic_not|{<p186> Y}}",  ];
 x4 [ shape=record, style=rounded, label="<s0> 14:12 - 2:0 ", color="black", fontcolor="black" ];
 x4:e -> c192:p184:w [arrowhead=odiamond, arrowtail=odiamond, dir=both, color="black", fontcolor="black", style="setlinewidth(3)", label=""];
 c193 [ shape=record, label="{{<p184> A}|$235\n$logic_not|{<p186> Y}}",  ];
