@@ -149,27 +149,27 @@ Both share the same firmware image (`firmware/prog.hex`).
 
 ---
 
-## 🛠️ Useful Commands
+## Useful Commands
 
-### 🔧 Build & Run with Verilator
+### Build & Run with Verilator
 ```bash
 make && make run
 ```
 Compila il progetto e lo esegue utilizzando **Verilator**.
 
-### 🌊 Verilator Waveform Flow
+### Verilator Waveform Flow
 ```bash
 make clean && make WAVES=1 all && ./build/sim
 ```
 Esegue una compilazione pulita, genera le **waveform (VCD)** e avvia la simulazione tramite Verilator.
 
-### ⚙️ Build & Run with Icarus Verilog
+### Build & Run with Icarus Verilog
 ```bash
 make -f Makefile2 icarus
 ```
 Compila ed esegue la simulazione utilizzando **Icarus Verilog**.
 
-### 📈 Icarus Waveform Flow
+### Icarus Waveform Flow
 ```bash
 make -f Makefile2 waves
 ```
