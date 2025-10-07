@@ -177,10 +177,10 @@ Esegue la simulazione con Icarus Verilog e genera le **waveform** per l’analis
 
 ---
 
-## 📚 Reference
+## Reference
 
 Per la documentazione e i dettagli sull’ISA RISC-V, puoi consultare la seguente risorsa:  
-👉 [RISC-V ISA Documentation](https://msyksphinz-self.github.io/riscv-isadoc/html/rvi.html)
+[RISC-V ISA Documentation](https://msyksphinz-self.github.io/riscv-isadoc/html/rvi.html)
 
 
 ## License
