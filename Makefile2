@@ -3,6 +3,7 @@ VERILATOR ?= verilator
 ICARUS    ?= iverilog
 VVP       ?= vvp
 RISCV     ?= riscv-none-elf
+GTKWAVE   ?= gtkwave
 
 AS      := $(RISCV)-as
 CC      := $(RISCV)-gcc
@@ -11,12 +12,17 @@ OBJCOPY := $(RISCV)-objcopy
 TOP       = mini_rv32i
 BUILD_DIR = build
 RTL       = rtl/mini_rv32i.v
-TB        = sim/main.cpp
-BIN       = $(BUILD_DIR)/sim
-ICARUS_TB = sim/tb.v
-ICARUS_BUILD = $(BUILD_DIR)/icarus
-ICARUS_BIN   = $(ICARUS_BUILD)/sim
-ICARUS_VCD   = $(BUILD_DIR)/icarus_trace.vcd
+TB          = sim/main.cpp
+BIN         = $(BUILD_DIR)/sim
+TB_STRONG   = sim/main2.cpp
+BIN_STRONG  = $(BUILD_DIR)/sim_strong
+ICARUS_TB   = sim/tb.v
+ICARUS_TB_STRONG = sim/tb2.v
+ICARUS_BUILD     = $(BUILD_DIR)/icarus
+ICARUS_BIN       = $(ICARUS_BUILD)/sim
+ICARUS_BIN_STRONG = $(ICARUS_BUILD)/sim_strong
+ICARUS_VCD       = $(BUILD_DIR)/icarus_trace.vcd
+ICARUS_VCD_STRONG = $(BUILD_DIR)/icarus_trace2.vcd
 
 # Sorgenti firmware
 FW_ASM   = firmware/prog.S
@@ -33,7 +39,7 @@ FW_LDFLAGS = -Wl,--no-relax -Wl,-Ttext=0x0
 # Abilita sempre il tracing
 TRACE_FLAGS = --trace-fst --trace-structs
 
-.PHONY: all run clean waves icarus
+.PHONY: all run run_provanti icarus icarus_provanti clean waves waves_provanti
 
 all: $(BIN)
 
@@ -65,26 +71,60 @@ $(BIN): $(RTL) $(TB) $(FW_HEX)
 	  -O3 -CFLAGS "-std=c++17 -DTRACE_FST" \
 	  --build -Mdir $(BUILD_DIR) -o sim
 
+$(BIN_STRONG): $(RTL) $(TB_STRONG) $(FW_HEX)
+	@mkdir -p $(BUILD_DIR)
+	$(VERILATOR) -Wall $(TRACE_FLAGS) --cc $(RTL) --exe $(TB_STRONG) \
+	  -O3 -CFLAGS "-std=c++17 -DTRACE_FST" \
+	  --build -Mdir $(BUILD_DIR) -o sim_strong
+
 run: $(BIN)
 	./$(BIN)
 
+run_provanti: $(BIN_STRONG)
+	./$(BIN_STRONG)
+
 # Build + run with Icarus Verilog (Verilog testbench)
 icarus: $(ICARUS_BIN)
+	$(VVP) $<
+
+icarus_provanti: $(ICARUS_BIN_STRONG)
 	$(VVP) $<
 
 $(ICARUS_BIN): $(RTL) $(ICARUS_TB) $(FW_HEX)
 	@mkdir -p $(ICARUS_BUILD)
 	$(ICARUS) -g2012 -o $@ $(ICARUS_TB) $(RTL)
 
+$(ICARUS_BIN_STRONG): $(RTL) $(ICARUS_TB_STRONG) $(FW_HEX)
+	@mkdir -p $(ICARUS_BUILD)
+	$(ICARUS) -g2012 -o $@ $(ICARUS_TB_STRONG) $(RTL)
+
 # Modalità “onde”: crea trace.fst in ogni caso
 waves: $(ICARUS_BIN)
 	@echo "Simulazione Icarus con tracciamento (icarus_trace.vcd)..."
 	$(VVP) $(ICARUS_BIN)
 	@if [ -f $(ICARUS_VCD) ]; then \
-	  echo "File delle onde creato: $(ICARUS_VCD)"; \
-	  gtkwave $(ICARUS_VCD) & \
+	  if command -v $(GTKWAVE) >/dev/null 2>&1 && [ -n "$$DISPLAY" ]; then \
+	    echo "Apro onde con GTKWave: $(GTKWAVE) $(ICARUS_VCD)"; \
+	    $(GTKWAVE) $(ICARUS_VCD) & \
+	  else \
+	    echo "File delle onde salvato in $(ICARUS_VCD) (avvia GTKWave manualmente se necessario)."; \
+	  fi; \
 	else \
 	  echo "Nessun file $(ICARUS_VCD) trovato. Verifica che sim/tb.v abiliti $dumpvars."; \
+	fi
+
+waves_provanti: $(ICARUS_BIN_STRONG)
+	@echo "Simulazione Icarus (test provanti) con tracciamento (icarus_trace2.vcd)..."
+	$(VVP) $(ICARUS_BIN_STRONG)
+	@if [ -f $(ICARUS_VCD_STRONG) ]; then \
+	  if command -v $(GTKWAVE) >/dev/null 2>&1 && [ -n "$$DISPLAY" ]; then \
+	    echo "Apro onde con GTKWave: $(GTKWAVE) $(ICARUS_VCD_STRONG)"; \
+	    $(GTKWAVE) $(ICARUS_VCD_STRONG) & \
+	  else \
+	    echo "File delle onde salvato in $(ICARUS_VCD_STRONG) (avvia GTKWave manualmente se necessario)."; \
+	  fi; \
+	else \
+	  echo "Nessun file $(ICARUS_VCD_STRONG) trovato. Verifica che sim/tb2.v abiliti $dumpvars."; \
 	fi
 
 clean:

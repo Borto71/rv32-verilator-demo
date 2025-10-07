@@ -1,6 +1,7 @@
 # --- Toolchain ---
 VERILATOR ?= verilator
 RISCV     ?= riscv-none-elf
+GTKWAVE   ?= gtkwave
 
 AS      := $(RISCV)-as
 CC      := $(RISCV)-gcc
@@ -11,6 +12,8 @@ BUILD_DIR = build
 RTL       = rtl/mini_rv32i.v
 TB        = sim/main.cpp
 BIN       = $(BUILD_DIR)/sim
+TB_STRONG = sim/main2.cpp
+BIN_STRONG = $(BUILD_DIR)/sim_strong
 
 # Sorgenti firmware
 FW_ASM   = firmware/prog.S
@@ -30,7 +33,7 @@ ifeq ($(WAVES),1)
 TRACE_FLAGS = --trace-fst --trace-structs
 endif
 
-.PHONY: all run clean waves
+.PHONY: all run run_provanti clean waves waves_provanti
 
 all: $(BIN)
 
@@ -62,13 +65,45 @@ $(BIN): $(RTL) $(TB) $(FW_HEX)
 	  -O3 -CFLAGS "-std=c++17" \
 	  --build -Mdir $(BUILD_DIR) -o sim
 
+$(BIN_STRONG): $(RTL) $(TB_STRONG) $(FW_HEX)
+	@mkdir -p $(BUILD_DIR)
+	$(VERILATOR) -Wall $(TRACE_FLAGS) --cc $(RTL) --exe $(TB_STRONG) \
+	  -O3 -CFLAGS "-std=c++17" \
+	  --build -Mdir $(BUILD_DIR) -o sim_strong
+
 run: $(BIN)
 	./$(BIN)
+
+run_provanti: $(BIN_STRONG)
+	./$(BIN_STRONG)
 
 waves:
 	$(MAKE) WAVES=1 all
 	./$(BIN)
-	@echo "Apro onde con GTKWave: gtkwave $(BUILD_DIR)/trace.fst &"
+	@if [ -f $(BUILD_DIR)/trace.fst ]; then \
+	  if command -v $(GTKWAVE) >/dev/null 2>&1 && [ -n "$$DISPLAY" ]; then \
+	    echo "Apro onde con GTKWave: $(GTKWAVE) $(BUILD_DIR)/trace.fst"; \
+	    $(GTKWAVE) $(BUILD_DIR)/trace.fst & \
+	  else \
+	    echo "Traccia salvata in $(BUILD_DIR)/trace.fst (avvia GTKWave manualmente se necessario)."; \
+	  fi; \
+	else \
+	  echo "Nessun file di trace trovato in $(BUILD_DIR)/trace.fst"; \
+	fi
+
+waves_provanti:
+	$(MAKE) WAVES=1 $(BIN_STRONG)
+	./$(BIN_STRONG)
+	@if [ -f $(BUILD_DIR)/trace_strong.fst ]; then \
+	  if command -v $(GTKWAVE) >/dev/null 2>&1 && [ -n "$$DISPLAY" ]; then \
+	    echo "Apro onde con GTKWave: $(GTKWAVE) $(BUILD_DIR)/trace_strong.fst"; \
+	    $(GTKWAVE) $(BUILD_DIR)/trace_strong.fst & \
+	  else \
+	    echo "Traccia salvata in $(BUILD_DIR)/trace_strong.fst (avvia GTKWave manualmente se necessario)."; \
+	  fi; \
+	else \
+	  echo "Nessun file di trace trovato in $(BUILD_DIR)/trace_strong.fst"; \
+	fi
 
 clean:
 	rm -rf $(BUILD_DIR) $(FW_HEX)

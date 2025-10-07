@@ -1,6 +1,6 @@
 `timescale 1ns/1ps
 
-module tb_mini_rv32i;
+module tb2_mini_rv32i;
   reg         clk = 0;
   reg         rst = 1;
   reg  [31:0] io_in_a = 0;
@@ -28,16 +28,17 @@ module tb_mini_rv32i;
   localparam integer NUM_TESTS  = 5;
   localparam integer MAX_CYCLES = 4096;
 
-  // Tabelle di stimoli e risultati attesi
+  // Tabelle di stimoli e risultati attesi (identiche a quelle di main2.cpp)
   reg [31:0] stim_a   [0:NUM_TESTS-1];
   reg [31:0] stim_b   [0:NUM_TESTS-1];
   reg [1:0]  stim_op  [0:NUM_TESTS-1];
   reg [31:0] expected [0:NUM_TESTS-1];
+  reg [8*20-1:0] test_name [0:NUM_TESTS-1];
 
   integer test_id;
   reg     global_pass;
 
-  // Task riutilizzabile che pilota il core, attende done e verifica gli output
+  // Task riutilizzabile che replica la sequenza di reset, esecuzione e verifica del C++
   task run_test;
     input integer idx;
     input [31:0] a;
@@ -46,11 +47,14 @@ module tb_mini_rv32i;
     input [31:0] atteso;
     integer ciclo;
     reg test_ok;
+    reg [8*20-1:0] nome;
     begin
-      // Pre-carica gli ingressi MMIO e genera un reset pulito
+      // Pre-carica gli ingressi MMIO e garantisce uno stato iniziale noto
       io_in_a = a;
       io_in_b = b;
       io_op   = op;
+
+      nome = test_name[idx];
 
       rst = 1;
       repeat (4) @(posedge clk);
@@ -63,25 +67,25 @@ module tb_mini_rv32i;
           @(posedge clk);
           if (done) begin
             if (!io_out_valid) begin
-              $display("[TEST %0d] ERRORE: io_out_valid non attivo", idx + 1);
+              $display("[TEST %0d - %0s] ERRORE: io_out_valid non attivo", idx + 1, nome);
               global_pass = 0;
             end
 
             if (io_out_res !== atteso) begin
-              $display("[TEST %0d] ERRORE: io_out_res=0x%08x atteso=0x%08x",
-                       idx + 1, io_out_res, atteso);
+              $display("[TEST %0d - %0s] ERRORE: io_out_res=0x%08x atteso=0x%08x",
+                       idx + 1, nome, io_out_res, atteso);
               global_pass = 0;
             end
 
             if (x3_out !== atteso) begin
-              $display("[TEST %0d] ERRORE: x3_out=0x%08x atteso=0x%08x",
-                       idx + 1, x3_out, atteso);
+              $display("[TEST %0d - %0s] ERRORE: x3_out=0x%08x atteso=0x%08x",
+                       idx + 1, nome, x3_out, atteso);
               global_pass = 0;
             end
 
             if (io_out_valid && io_out_res === atteso && x3_out === atteso) begin
-              $display("[TEST %0d] OK: A=0x%08x B=0x%08x OP=%0d -> 0x%08x",
-                       idx + 1, a, b, op, io_out_res);
+              $display("[TEST %0d - %0s] OK: risultato 0x%08x, op=%0d",
+                       idx + 1, nome, io_out_res, op);
               test_ok = 1;
             end
 
@@ -92,14 +96,14 @@ module tb_mini_rv32i;
 
       if (!test_ok) begin
         if (!done) begin
-          $display("[TEST %0d] Timeout: segnale done mai attivo", idx + 1);
+          $display("[TEST %0d - %0s] Timeout: segnale done mai attivo", idx + 1, nome);
           global_pass = 0;
         end else begin
-          $display("[TEST %0d] FALLITO", idx + 1);
+          $display("[TEST %0d - %0s] FALLITO", idx + 1, nome);
         end
       end
 
-      // Applica un reset breve per pulire lo stato prima del test successivo
+      // Pulizia dello stato prima del test successivo
       rst = 1;
       repeat (2) @(posedge clk);
       rst = 0;
@@ -108,12 +112,17 @@ module tb_mini_rv32i;
   endtask
 
   initial begin
-    // Stimoli pensati per stressare le varie combinazioni del firmware
     stim_a[0]   = 32'd21;        stim_b[0]   = 32'd9;         stim_op[0]  = 2'd0; expected[0] = 32'd30;
     stim_a[1]   = 32'd9;         stim_b[1]   = 32'd21;        stim_op[1]  = 2'd1; expected[1] = 32'hFFFFFFF4;
     stim_a[2]   = 32'hFFFF0000;  stim_b[2]   = 32'h0000FFFF;  stim_op[2]  = 2'd0; expected[2] = 32'hFFFFFFFF;
     stim_a[3]   = 32'd5;         stim_b[3]   = 32'd7;         stim_op[3]  = 2'd2; expected[3] = 32'd12;
     stim_a[4]   = 32'h12345678;  stim_b[4]   = 32'h12345678;  stim_op[4]  = 2'd1; expected[4] = 32'd0;
+
+    test_name[0] = "Somma base";
+    test_name[1] = "Sottrazione negativa";
+    test_name[2] = "Overflow somma";
+    test_name[3] = "Somma di default";
+    test_name[4] = "Sottrazione a zero";
 
     global_pass = 1;
 
@@ -131,7 +140,7 @@ module tb_mini_rv32i;
   end
 
   initial begin
-    $dumpfile("build/icarus_trace.vcd");
-    $dumpvars(0, tb_mini_rv32i);
+    $dumpfile("build/icarus_trace2.vcd");
+    $dumpvars(0, tb2_mini_rv32i);
   end
 endmodule
