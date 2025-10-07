@@ -46,6 +46,7 @@ module tb_mini_rv32i;
     input [31:0] atteso;
     integer ciclo;
     reg test_ok;
+    
     begin
       // Pre-carica gli ingressi MMIO e genera un reset pulito
       io_in_a = a;
