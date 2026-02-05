@@ -173,7 +173,7 @@ Compile and execute simulation on **Icarus Verilog**.
 ```bash
 make -f Makefile2 waves
 ```
-Esegue la simulazione con Icarus Verilog e genera le **waveform** per l’analisi.
+Execute the simulation with Icarus Verilog and generates the **waveform** for analysis.
 
 ---
 
